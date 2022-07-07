@@ -1,0 +1,9 @@
+#+title accounting
+
+* Intro
+  the objective is build an accounting system for a household. the main objective is to determine
+  1. net worth
+  2. liquidity
+  3. test different scenarios on their impact on the two items on top
+    
+I will use this reference to create chart of accounts https://openprairie.sdstate.edu/cgi/viewcontent.cgi?article=1480&context=extension_circ

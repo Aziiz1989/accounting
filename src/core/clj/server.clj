@@ -19,7 +19,9 @@
    [integrant.core :as ig]
    [core.clj.routes :as routes]
    [clojure.spec.alpha :as s]
-   [spec-tools.core :as st]))
+   [spec-tools.core :as st]
+   [core.clj.ui :as ui]
+   [hiccup.core :refer [html]]))
 
 (defn parse-string-to-date [date]
   (prn date)
@@ -61,7 +63,32 @@
 (defmethod ig/init-key ::app [_ {:keys [node]}]
   (ring/ring-handler
    (ring/router
-    [["/swagger.json"
+    [["/about"
+      {:get (fn [request]
+              ;; (clojure.pprint/pprint request)
+              (-> (ui/base-page (ui/form) (ui/table ui/cols ui/data))
+                  (ring.util.response/response)
+                  (ring.util.response/header "content-type" "text/html")))}]
+     ["/submitted"
+      {:post (fn [request]
+               (clojure.pprint/pprint (:form-params request))
+               (-> (ui/submitted (:form-params request))
+                   html
+                   (ring.util.response/response)
+                   (ring.util.response/header "content-type" "text/html")))}]
+     ["/form"
+      {:get (fn [request]
+               (-> (ui/form)
+                   html
+                   (ring.util.response/response)
+                   (ring.util.response/header "content-type" "text/html")))}]
+     ["/input"
+      {:get (fn [request]
+               (-> (ui/input)
+                   html
+                   (ring.util.response/response)
+                   (ring.util.response/header "content-type" "text/html")))}]
+     ["/swagger.json"
       {:get {:no-doc true
              :swagger {:info {:title "my-api"}}
              :handler (swagger/create-swagger-handler)}}]
@@ -77,8 +104,7 @@
        ;;:validate spec/validate ;; enable spec validation for route data
        ;;:reitit.spec/wrap spell/closed ;; strict top-level validation
      :exception pretty/exception
-     :data {
-            :coercion reitit.coercion.spec/coercion
+     :data {:coercion reitit.coercion.spec/coercion
             :muuntaja m/instance
             :node node
             :middleware [;; swagger feature
@@ -86,14 +112,14 @@
                          muuntaja/format-middleware
                          coercion/coerce-exceptions-middleware
                          coercion/coerce-request-middleware
-                         inject-db-conn-middleware
-                           ]}})
+                         reitit.ring.middleware.parameters/parameters-middleware
+                         inject-db-conn-middleware]}})
    (ring/routes
-      (swagger-ui/create-swagger-ui-handler
-        {:path "/"
-         :config {:validatorUrl nil
-                  :operationsSorter "alpha"}})
-      (ring/create-default-handler))))
+    (swagger-ui/create-swagger-ui-handler
+     {:path "/"
+      :config {:validatorUrl nil
+               :operationsSorter "alpha"}})
+    (ring/create-default-handler))))
 
 
 (defmethod ig/init-key ::node [_ {:keys [jdbc-url]}]
@@ -122,13 +148,16 @@
 
 (comment
   (ig/halt! system)
+  (def reload
+    (ig/suspend! system)
+    (ig/resume config system))
 
   (.close (::node system))
   (.stop (::server system))
 
   ((::app system) {:request-method :post :uri "/post-entries"
                    :body-params [{:account :cash :type :credit :amount 12345 :date "2021-01-01"}]})
-  
+
   ((::app system) {:request-method :get :uri "/get-all-entries"})
   (.close node)
 
@@ -143,7 +172,5 @@
 
   (core.clj.db.queries/get-all-entries (::node system))
 
-  (m/default-options)
-
-  )
+  (m/default-options))
 

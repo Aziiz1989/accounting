@@ -8,7 +8,10 @@
         metosin/reitit {:mvn/version "0.5.18"}
         ring/ring-jetty-adapter {:mvn/version "1.9.5"}
         ring/ring-core {:mvn/version "1.9.5"}
-        metosin/muuntaja {:mvn/version "0.6.8"}}
+        metosin/muuntaja {:mvn/version "0.6.8"}
+        hiccup/hiccup {:mvn/version "2.0.0-alpha2"}
+        com.taoensso/timbre {:mvn/version "5.2.1"}
+        com.fzakaria/slf4j-timbre {:mvn/version "0.3.21"}}
  :Aliases
  {:run-m {:main-opts ["-m" "core.budget"]}
   :run-x {:ns-default core.budget
